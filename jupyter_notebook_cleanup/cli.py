@@ -45,11 +45,11 @@ def remove_output_file(path, patterns, remove_kernel_metadata, preview):
     with tempfile.TemporaryDirectory() as tdir:
         tpath = os.path.join(tdir, "jupyter-notebook-cleanup-" + str(uuid.uuid1()))
         shutil.copy2(path, tpath)
-        with open(path, "rt") as f:
+        with open(path, "rt", encoding="utf-8") as f:
             data = json.load(f, object_pairs_hook=OrderedDict)
         new_data = remove_output_object(data, patterns, remove_kernel_metadata)
         before_j = json.dumps(data, **dump_args)
-        after_j = json.dumps(new_data, **dump_args)
+        after_j = json.dumps(new_data, **dump_args) + "\n"
         if preview:
             before_l, after_l = before_j.splitlines(), after_j.splitlines()
             print("\n".join(difflib.unified_diff(before_l, after_l, fromfile="before", tofile="after")))
@@ -57,6 +57,7 @@ def remove_output_file(path, patterns, remove_kernel_metadata, preview):
             if before_j != after_j:  # overwrite to the original file
                 with open(path, "wt", encoding="utf-8") as fo:
                     json.dump(new_data, fo, **dump_args)
+                    fo.write("\n")
         shutil.copystat(tpath, path)  # copy original timestamps
 
 
